@@ -1,0 +1,80 @@
+<launch>
+  <arg name="enable_raw" default="false"/>
+  <arg name="enable_imv" default="false"/>
+  <arg name="camera_id" default="0"/>
+  <arg name="camera_frame_id" default="raspicam"/>
+  <arg name="camera_name" default="camerav2_410x308"/>
+  <arg name="base_speed" default="0.15"/>
+  <arg name="speed_min" default="0.1"/>
+  <arg name="speed_max" default="0.4"/>
+  <arg name="angular_max" default="1"/>
+  <arg name="kp" default="1.2"/>
+  <arg name="ki" default="0.0"/>
+  <arg name="kd" default="0.12"/>
+  <arg name="error_timeout" default="20"/>
+  <arg name="crop_x" default="0"/>
+  <arg name="crop_y" default="180"/>
+  <arg name="crop_w" default="410"/>
+  <arg name="crop_h" default="154"/>
+  <arg name="row_far_ratio" default="0.45"/>
+  <arg name="margin_px" default="40"/>
+  <arg name="min_gap_px" default="40"/>
+  <arg name="canny_low" default="80"/>
+  <arg name="canny_high" default="180"/>
+  <arg name="blur_ksize" default="5"/>
+  <arg name="blur_sigma" default="1.5"/>
+  <arg name="thr_low" default="0"/>
+  <arg name="thr_high" default="80"/>
+  <arg name="ema_alpha" default="0.25"/>
+  <arg name="draw_debug" default="true"/>
+  <param name="base_speed" value="$(arg base_speed)"/>
+
+  <node type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
+    <param name="private_topics" value="true"/>
+
+    <param name="camera_frame_id" value="$(arg camera_frame_id)"/>
+    <param name="enable_raw" value="$(arg enable_raw)"/>
+    <param name="enable_imv" value="$(arg enable_imv)"/>
+    <param name="camera_id" value="$(arg camera_id)"/>
+
+    <param name="camera_info_url" value="package://raspicam_node/camera_info/camerav2_410x308.yaml"/>
+    <param name="camera_name" value="$(arg camera_name)"/>
+    <param name="width" value="410"/>
+    <param name="height" value="308"/>
+
+    <param name="framerate" value="30"/>
+    <param name="exposure_mode" value="antishake"/>
+    <param name="shutter_speed" value="0"/>
+  </node>
+
+  <node pkg="error_management" type="error_management_node" name="preview_controller" output="screen">
+    <param name="speed_min" value="$(arg speed_min)"/>
+    <param name="speed_max" value="$(arg speed_max)"/>
+    <param name="base_speed" value="$(arg base_speed)"/>
+    <param name="angular_max" value="$(arg angular_max)"/>
+    <param name="kp" value="$(arg kp)"/>
+    <param name="ki" value="$(arg ki)"/>
+    <param name="kd" value="$(arg kd)"/>
+    <param name="error_timeout" value="$(arg error_timeout)"/>
+  </node>
+
+  <node type="image_processing_node" pkg="image_processing" name="image_processing" output="screen">
+    <param name="crop_x" value="$(arg crop_x)"/>
+    <param name="crop_y" value="$(arg crop_y)"/>
+    <param name="crop_w" value="$(arg crop_w)"/>
+    <param name="crop_h" value="$(arg crop_h)"/>
+    <param name="row_far_ratio" value="$(arg row_far_ratio)"/>
+    <param name="margin_px" value="$(arg margin_px)"/>
+    <param name="min_gap_px" value="$(arg min_gap_px)"/>
+    <param name="canny_low" value="$(arg canny_low)"/>
+    <param name="canny_high" value="$(arg canny_high)"/>
+    <param name="blur_ksize" value="$(arg blur_ksize)"/>
+    <param name="blur_sigma" value="$(arg blur_sigma)"/>
+    <param name="thr_low" value="$(arg thr_low)"/>
+    <param name="thr_high" value="$(arg thr_high)"/>
+    <param name="ema_alpha" value="$(arg ema_alpha)"/>
+    <param name="draw_debug" value="$(arg draw_debug)"/>
+  </node>
+
+  <node pkg="motor_control" type="motor_control_node" name="motor_control_node" output="screen"/>
+</launch>
