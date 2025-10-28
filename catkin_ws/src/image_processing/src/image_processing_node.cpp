@@ -146,38 +146,19 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
     float center_far      = 0.5f * (rowFarCols[0]  + rowFarCols[1]);
     float bottom_center_x = 0.5f * static_cast<float>(cols);
 
-    // 1) lateral error: near center vs image center, normalized by half-width
-    //float x_center = 0.5f * float(cols);
-    //e_y = (center_near - x_center) / (0.5f * float(cols)); // ~[-1, 1]
-
-    // 2) heading error: angle between near and far centers
-    //float dy = std::max(1.0f, float(row_near - row_far));
-    ///float dx = (center_near - center_far);
-    //e_psi = std::atan2(dx, dy); // radians
-
     line_error = (bottom_center_x - center_far) / static_cast<float>(cols);
-    /*
-    // EMA
-    if (!have_filter) {
-      e_y_f = e_y; e_psi_f = e_psi; have_filter = true;
-    } else {
-      float a = std::max(0.0f, std::min(1.0f, g_params.ema_alpha));
-      e_y_f   = e_y_f   + a * (e_y   - e_y_f);
-      e_psi_f = e_psi_f + a * (e_psi - e_psi_f);
-    }
-    */
 
-    //have_measure = true;
 
     // Debug draw
     if (g_params.draw_debug) {
       cv::circle(edges, cv::Point(int(rowFarCols[0]),  row_far),  3, cv::Scalar(255), -1);
       cv::circle(edges, cv::Point(int(rowFarCols[1]),  row_far),  3, cv::Scalar(255), -1);
+
       const cv::Point far_point(static_cast<int>(center_far), row_far);
       const cv::Point bottom_center(static_cast<int>(bottom_center_x), rows - 1);
+
       cv::circle(edges, bottom_center, 3, cv::Scalar(255), -1);
-      //cv::circle(edges, cv::Point(int(rowNearCols[0]), row_near), 3, cv::Scalar(255), -1);
-      //cv::circle(edges, cv::Point(int(rowNearCols[1]), row_near), 3, cv::Scalar(255), -1);
+
       cv::line(edges, far_point, bottom_center, cv::Scalar(255), 1);
     }
   } else {
@@ -188,15 +169,10 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
   // Publish errors
   std_msgs::Float32 error_msg;//msg_lat, msg_head, msg_legacy;
   error_msg.data = line_error;
-  //msg_lat.data  = e_y_f;
-  //msg_head.data = e_psi_f;
-  //msg_legacy.data = e_psi_f; // legacy /error = heading
+
 
   pub_error.publish(error_msg);
 
-  //pub_error_lat.publish(msg_lat);
-  //pub_error_head.publish(msg_head);
-  //pub_error_legacy.publish(msg_legacy);
 
   // Publish debug image
   cv_bridge::CvImage img_bridge;

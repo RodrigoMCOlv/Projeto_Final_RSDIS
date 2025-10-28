@@ -10,12 +10,14 @@ struct Gains {
   double speed_min{0.05};
   double speed_max{0.2};
 
+
   double angular_max{0.2};
 
   double kp{0.3};
   double ki{0.0};
   double kd{0.0};
 
+  double boost{0.2};
 
  /* 
   double kp_lat{0.0};
@@ -41,6 +43,9 @@ public:
     pnh_.param("speed_max", gains_.speed_max, gains_.speed_max);
 
     pnh_.param("angular_max", gains_.angular_max, gains_.angular_max);
+
+    pnh_.param("boost", gains_.boost, gains_.boost);
+
 
     /*
     pnh_.param("kp_lat", gains_.kp_lat, gains_.kp_lat);
@@ -73,6 +78,12 @@ private:
     return std::max(lo, std::min(hi, v));
   }
 
+  void refreshParameters() {
+    double updated_base_speed = gains_.base_speed;
+    pnh_.param("base_speed", updated_base_speed, gains_.base_speed);
+    gains_.base_speed = updated_base_speed;
+  }
+
     void errorCb(const std_msgs::Float32::ConstPtr& msg) {
     error_cb = msg->data;
     time_now = ros::Time::now();
@@ -91,9 +102,9 @@ private:
   }
     */
 
-
   void controlLoop(const ros::TimerEvent&) {
     const ros::Time now = ros::Time::now();
+    refreshParameters();
     const bool fresh_error = have_cb &&
                              (now - time_now).toSec() <= gains_.error_timeout;
 
@@ -124,78 +135,27 @@ private:
     }
 
 
-
-    /*const bool fresh_lat = have_e_y_ &&
-                           (now - t_e_y_).toSec() <= gains_.error_timeout;
-    const bool fresh_head = have_e_psi_ &&
-                            (now - t_e_psi_).toSec() <= gains_.error_timeout;
-
-    double dt = last_time_.isZero() ? 0.02 : (now - last_time_).toSec();
-    if (dt <= 0.0) dt = 0.02;
-
-    double lat_output = 0.0;
-    if (fresh_lat) {
-      double lat_error = static_cast<double>(e_y_);
-      lat_integral_ += lat_error * dt;
-      double lat_derivative = 0.0;
-      if (have_prev_lat_) {
-        lat_derivative = (lat_error - prev_lat_error_) / dt;
-      }
-      lat_output = gains_.kp_lat * lat_error +
-                   gains_.ki_lat * lat_integral_ +
-                   gains_.kd_lat * lat_derivative;
-      prev_lat_error_ = lat_error;
-      have_prev_lat_ = true;
-    } else {
-      lat_integral_ = 0.0;
-      prev_lat_error_ = 0.0;
-      have_prev_lat_ = false;
-    }
-
-    double head_output = 0.0;
-    if (fresh_head) {
-      double head_error = static_cast<double>(e_psi_);
-      head_integral_ += head_error * dt;
-      double head_derivative = 0.0;
-      if (have_prev_head_) {
-        head_derivative = (head_error - prev_head_error_) / dt;
-      }
-      head_output = gains_.kp_head * head_error +
-                    gains_.ki_head * head_integral_ +
-                    gains_.kd_head * head_derivative;
-      prev_head_error_ = head_error;
-      have_prev_head_ = true;
-    } else {
-      head_integral_ = 0.0;
-      prev_head_error_ = 0.0;
-      have_prev_head_ = false;
-    }*/
-
     geometry_msgs::Twist cmd;
-    /*if (!fresh_lat && !fresh_head) {
-      cmd.linear.x = gains_.speed_min;
-      cmd.angular.z = 0.0;
-    } else {
-      double base_speed = clip(gains_.base_speed, gains_.speed_min, gains_.speed_max);
-      double angular_cmd = lat_output + head_output;
 
-
-      angular_cmd = clip(angular_cmd, -gains_.angular_max, gains_.angular_max);
-
-      cmd.linear.x = base_speed;
-      cmd.angular.z = angular_cmd;
-    }*/
     if (!fresh_error) {
       cmd.linear.x = gains_.speed_min;
       cmd.angular.z = 0.0;
     } else {
-      double base_speed = clip(gains_.base_speed, gains_.speed_min, gains_.speed_max);
+
+      if (error_output < 0.03 && error_output > -0.03)
+      {
+        double speed = clip(gains_.base_speed + gains_.boost, gains_.speed_min, gains_.speed_max);
+        cmd.linear.x = speed;
+      }
+      else{
+      double speed = clip(gains_.base_speed, gains_.speed_min, gains_.speed_max);
+      cmd.linear.x = speed;
+      }
+
       double angular_cmd = error_output;
-
-
       angular_cmd = clip(angular_cmd, -gains_.angular_max, gains_.angular_max);
 
-      cmd.linear.x = base_speed;
+      
       cmd.angular.z = angular_cmd;
     }
 
