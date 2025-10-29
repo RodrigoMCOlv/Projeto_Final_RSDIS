@@ -26,6 +26,9 @@
   <arg name="blur_sigma" default="1.5"/>
   <arg name="thr_low" default="0"/>
   <arg name="thr_high" default="70"/>
+
+  <arg name="finish_line_width" default="100"/>
+
   <arg name="rgb_sat_min" default="80"/>
   <arg name="rgb_val_min" default="80"/>
   <arg name="rgb_red_hue_min" default="0"/>
@@ -88,6 +91,7 @@
     <param name="thr_low" value="$(arg thr_low)"/>
     <param name="thr_high" value="$(arg thr_high)"/>
     <param name="ema_alpha" value="$(arg ema_alpha)"/>
+    <param name="finish_line_width" value="$(arg finish_line_width)"/>
     <param name="draw_debug" value="$(arg draw_debug)"/>
   </node>
 

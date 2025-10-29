@@ -237,16 +237,19 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
       cv::circle(debug_edges, cv::Point(int(rowFarColsBlue[1]),  row_far),  3, cv::Scalar(255), -1);
     }
   }
-
+  if(g_params.draw_debug){
+    // Publish debug image
+    cv_bridge::CvImage img_bridge;
+    sensor_msgs::Image img_msg;
+    std_msgs::Header header;
+    header.stamp = ros::Time::now();
+    img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, debug_edges);
+    img_bridge.toImageMsg(img_msg);
+    pub_image.publish(img_msg);
+  }
   pub_rgb.publish(colour_msg);
 
-  cv_bridge::CvImage img_bridge;
-  sensor_msgs::Image img_msg;
-  std_msgs::Header header;
-  header.stamp = ros::Time::now();
-  img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, debug_edges);
-  img_bridge.toImageMsg(img_msg);
-  pub_image.publish(img_msg);
+  
 }
 
 int main(int argc, char **argv)
