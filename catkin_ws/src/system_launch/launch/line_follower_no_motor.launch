@@ -25,7 +25,7 @@
   <arg name="blur_ksize" default="5"/>
   <arg name="blur_sigma" default="1.5"/>
   <arg name="thr_low" default="0"/>
-  <arg name="thr_high" default="80"/>
+  <arg name="thr_high" default="70"/>
   <arg name="rgb_sat_min" default="80"/>
   <arg name="rgb_val_min" default="80"/>
   <arg name="rgb_red_hue_min" default="0"/>
