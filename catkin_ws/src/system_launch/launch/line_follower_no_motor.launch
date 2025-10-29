@@ -4,20 +4,20 @@
   <arg name="camera_id" default="0"/>
   <arg name="camera_frame_id" default="raspicam"/>
   <arg name="camera_name" default="camerav2_410x308"/>
-  <arg name="base_speed" default="0.3"/>
-  <arg name="speed_min" default="0.0"/>
+  <arg name="base_speed" default="0.25"/>
+  <arg name="speed_min" default="0"/>
   <arg name="speed_max" default="1"/>
   <arg name="angular_max" default="1"/>
   <arg name="boost" default="0.0"/>
   <arg name="kp" default="0.625"/>
   <arg name="ki" default="0.0"/>
   <arg name="kd" default="0.075"/>
-  <arg name="error_timeout" default="3"/>
+  <arg name="error_timeout" default="20"/>
   <arg name="crop_x" default="0"/>
   <arg name="crop_y" default="180"/>
   <arg name="crop_w" default="410"/>
   <arg name="crop_h" default="154"/>
-  <arg name="row_far_ratio" default="0.45"/>
+  <arg name="row_far_ratio" default="0.5"/>
   <arg name="margin_px" default="40"/>
   <arg name="min_gap_px" default="40"/>
   <arg name="canny_low" default="80"/>
@@ -26,6 +26,9 @@
   <arg name="blur_sigma" default="1.5"/>
   <arg name="thr_low" default="0"/>
   <arg name="thr_high" default="70"/>
+
+  <arg name="finish_line_width" default="100"/>
+
   <arg name="rgb_sat_min" default="80"/>
   <arg name="rgb_val_min" default="80"/>
   <arg name="rgb_red_hue_min" default="0"/>
@@ -37,10 +40,11 @@
   <arg name="rgb_blue_hue_min" default="90"/>
   <arg name="rgb_blue_hue_max" default="130"/>
   <arg name="rgb_param_target" default="/error_management/base_speed"/>
-  <arg name="rgb_red_speed" default="0.3"/>
-  <arg name="rgb_green_speed" default="0.2"/>
+  <arg name="rgb_red_speed" default="0.4"/>
+  <arg name="rgb_green_speed" default="0.25"/>
   <arg name="rgb_blue_speed" default="0.1"/>
-  <arg name="draw_debug" default="false"/>
+  <arg name="ema_alpha" default="0.25"/>
+  <arg name="draw_debug" default="true"/>
 
   <node type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
     <param name="private_topics" value="true"/>
@@ -86,6 +90,8 @@
     <param name="blur_sigma" value="$(arg blur_sigma)"/>
     <param name="thr_low" value="$(arg thr_low)"/>
     <param name="thr_high" value="$(arg thr_high)"/>
+    <param name="ema_alpha" value="$(arg ema_alpha)"/>
+    <param name="finish_line_width" value="$(arg finish_line_width)"/>
     <param name="draw_debug" value="$(arg draw_debug)"/>
   </node>
 
@@ -122,4 +128,5 @@
     <param name="green_speed" value="$(arg rgb_green_speed)"/>
     <param name="blue_speed" value="$(arg rgb_blue_speed)"/>
   </node>
+
 </launch>

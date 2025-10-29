@@ -2,6 +2,7 @@
 #include "sensor_msgs/CompressedImage.h"
 #include "sensor_msgs/Image.h"
 #include "std_msgs/Float32.h"
+#include "std_msgs/Int32.h"
 #include "std_msgs/Header.h"
 
 #include <cv_bridge/cv_bridge.h>
@@ -16,6 +17,7 @@ using namespace cv;
 
 ros::Publisher pub_image;
 ros::Publisher pub_error;
+ros::Publisher pub_finish_line;
 
 struct Params {
   // Crop rectangle (defaults match your code: Rect(0,220,410,154))
@@ -41,7 +43,9 @@ struct Params {
   // Threshold (RGB inRange)
   int thr_low{0};              // 0..255
   int thr_high{100};           // 0..255
-
+  
+  int finish_line_width{100};  //px
+  
   // Debug
   bool draw_debug{true};
 } g_params;
@@ -122,6 +126,7 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
   int farCount = 0;
 
   bool farOK  = findTwoEdgesInRow(edges, row_far,  g_params.margin_px, g_params.min_gap_px, rowFarCols,  farCount);
+  std_msgs::Int32 finish_line;
 
   if (farOK) {
     // centers
@@ -130,6 +135,13 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
 
     line_error = (2*(bottom_center_x - center_far)) / static_cast<float>(cols);
 
+    
+    if((rowFarCols[1]-rowFarCols[0])>g_params.finish_line_width){
+      finish_line.data=1;
+    }else{
+      finish_line.data=0;
+      
+    }
 
     // Debug draw
     if (g_params.draw_debug) {
@@ -142,27 +154,33 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
       cv::circle(edges, bottom_center, 3, cv::Scalar(255), -1);
 
       cv::line(edges, far_point, bottom_center, cv::Scalar(255), 1);
+
+      
     }
   } else {
 
   }
 
+  if(g_params.draw_debug){
+    // Publish debug image
+      cv_bridge::CvImage img_bridge;
+      sensor_msgs::Image img_msg;
+      std_msgs::Header header;
+      header.stamp = ros::Time::now();
+      img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, edges);
+      img_bridge.toImageMsg(img_msg);
+      pub_image.publish(img_msg);
+    }
+
   // Publish errors
   std_msgs::Float32 error_msg;
   error_msg.data = line_error;
-
-
   pub_error.publish(error_msg);
 
+  pub_finish_line.publish(finish_line);
 
-  // Publish debug image
-  cv_bridge::CvImage img_bridge;
-  sensor_msgs::Image img_msg;
-  std_msgs::Header header;
-  header.stamp = ros::Time::now();
-  img_bridge = cv_bridge::CvImage(header, sensor_msgs::image_encodings::MONO8, edges);
-  img_bridge.toImageMsg(img_msg);
-  pub_image.publish(img_msg);
+
+
 }
 
 int main(int argc, char **argv)
@@ -190,16 +208,18 @@ int main(int argc, char **argv)
   nh.param("thr_low",   g_params.thr_low,   g_params.thr_low);
   nh.param("thr_high",  g_params.thr_high,  g_params.thr_high);
 
+  nh.param("finish_line_width", g_params.finish_line_width, g_params.finish_line_width);
+
   nh.param("draw_debug", g_params.draw_debug, g_params.draw_debug);
+  
 
   // I/O
   ros::Subscriber sub_cam =
       n.subscribe<sensor_msgs::CompressedImage>("/raspicam_node/image/compressed", 1, image_callback);
 
-  pub_image        = n.advertise<sensor_msgs::Image>("/Processed_Image", 1);
-
-
+  pub_image = n.advertise<sensor_msgs::Image>("/Processed_Image", 1);
   pub_error = n.advertise<std_msgs::Float32>("/error", 1);
+  pub_finish_line = n.advertise<std_msgs::Int32>("/Finish_Line", 1);
 
   ros::spin();
   return 0;
