@@ -45,6 +45,11 @@
   <arg name="rgb_blue_speed" default="0.1"/>
   <arg name="ema_alpha" default="0.25"/>
   <arg name="draw_debug" default="true"/>
+  <arg name="stats_error_topic" default="/error"/>
+  <arg name="stats_cmd_topic" default="/cmd_vel"/>
+  <arg name="stats_enable_keyboard" default="true"/>
+  <arg name="stats_status_period" default="5.0"/>
+  <arg name="stats_log_file" default=""/>
 
   <node type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
     <param name="private_topics" value="true"/>
@@ -127,6 +132,14 @@
     <param name="red_speed" value="$(arg rgb_red_speed)"/>
     <param name="green_speed" value="$(arg rgb_green_speed)"/>
     <param name="blue_speed" value="$(arg rgb_blue_speed)"/>
+  </node>
+
+  <node pkg="line_statistics" type="statistics_node" name="statistics" output="screen">
+    <param name="error_topic" value="$(arg stats_error_topic)"/>
+    <param name="cmd_topic" value="$(arg stats_cmd_topic)"/>
+    <param name="enable_keyboard" value="$(arg stats_enable_keyboard)"/>
+    <param name="status_period" value="$(arg stats_status_period)"/>
+    <param name="log_file" value="$(arg stats_log_file)"/>
   </node>
 
   <node pkg="motor_control" type="motor_control_node" name="motor_control_node" output="screen"/>
