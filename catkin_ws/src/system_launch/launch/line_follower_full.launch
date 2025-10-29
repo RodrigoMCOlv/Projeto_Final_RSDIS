@@ -9,9 +9,9 @@
   <arg name="speed_max" default="1"/>
   <arg name="angular_max" default="1"/>
   <arg name="boost" default="0.0"/>
-  <arg name="kp" default="1.25"/>
+  <arg name="kp" default="0.625"/>
   <arg name="ki" default="0.0"/>
-  <arg name="kd" default="0.15"/>
+  <arg name="kd" default="0.075"/>
   <arg name="error_timeout" default="20"/>
   <arg name="crop_x" default="0"/>
   <arg name="crop_y" default="180"/>

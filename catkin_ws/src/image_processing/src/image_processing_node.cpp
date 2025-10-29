@@ -42,9 +42,6 @@ struct Params {
   int thr_low{0};              // 0..255
   int thr_high{100};           // 0..255
 
-  // EMA smoothing
-  float ema_alpha{0.25f};
-
   // Debug
   bool draw_debug{true};
 } g_params;
@@ -131,7 +128,7 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
     float center_far      = 0.5f * (rowFarCols[0]  + rowFarCols[1]);
     float bottom_center_x = 0.5f * static_cast<float>(cols);
 
-    line_error = (bottom_center_x - center_far) / static_cast<float>(cols);
+    line_error = (2*(bottom_center_x - center_far)) / static_cast<float>(cols);
 
 
     // Debug draw
@@ -193,7 +190,6 @@ int main(int argc, char **argv)
   nh.param("thr_low",   g_params.thr_low,   g_params.thr_low);
   nh.param("thr_high",  g_params.thr_high,  g_params.thr_high);
 
-  nh.param("ema_alpha", g_params.ema_alpha, g_params.ema_alpha);
   nh.param("draw_debug", g_params.draw_debug, g_params.draw_debug);
 
   // I/O

@@ -9,9 +9,9 @@
   <arg name="speed_max" default="1"/>
   <arg name="angular_max" default="1"/>
   <arg name="boost" default="0.0"/>
-  <arg name="kp" default="1.1"/>
+  <arg name="kp" default="0.625"/>
   <arg name="ki" default="0.0"/>
-  <arg name="kd" default="0.15"/>
+  <arg name="kd" default="0.075"/>
   <arg name="error_timeout" default="3"/>
   <arg name="crop_x" default="0"/>
   <arg name="crop_y" default="180"/>
@@ -40,7 +40,6 @@
   <arg name="rgb_red_speed" default="0.3"/>
   <arg name="rgb_green_speed" default="0.2"/>
   <arg name="rgb_blue_speed" default="0.1"/>
-  <arg name="ema_alpha" default="0.25"/>
   <arg name="draw_debug" default="false"/>
 
   <node type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
@@ -87,7 +86,6 @@
     <param name="blur_sigma" value="$(arg blur_sigma)"/>
     <param name="thr_low" value="$(arg thr_low)"/>
     <param name="thr_high" value="$(arg thr_high)"/>
-    <param name="ema_alpha" value="$(arg ema_alpha)"/>
     <param name="draw_debug" value="$(arg draw_debug)"/>
   </node>
 
