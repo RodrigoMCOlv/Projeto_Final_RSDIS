@@ -4,8 +4,8 @@
   <arg name="camera_id" default="0"/>
   <arg name="camera_frame_id" default="raspicam"/>
   <arg name="camera_name" default="camerav2_410x308"/>
-  <arg name="base_speed" default="0.2"/>
-  <arg name="speed_min" default="0.08"/>
+  <arg name="base_speed" default="0.3"/>
+  <arg name="speed_min" default="0.0"/>
   <arg name="speed_max" default="1"/>
   <arg name="angular_max" default="1"/>
   <arg name="boost" default="0.0"/>

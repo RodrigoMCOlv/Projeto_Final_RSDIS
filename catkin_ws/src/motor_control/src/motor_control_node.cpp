@@ -130,11 +130,6 @@ class MotorControl {
     if(speed_Left > 1) speed_Left = 1;
     if(speed_Left < -1) speed_Left = -1;
 
-    if (speed_Left > 0 && speed_Left < 0.08 ) speed_Left = 0.08;
-    if (speed_Left < 0 && speed_Left > -0.08) speed_Left = -0.08;
-    if (speed_Right > 0 && speed_Right < 0.08) speed_Right = 0.08;
-    if (speed_Right < 0 && speed_Right > -0.08) speed_Right = -0.08;
-
     leftDrive(speed_Left);
     rightDrive(speed_Right);
   }

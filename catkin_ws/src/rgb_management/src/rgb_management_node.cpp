@@ -17,6 +17,7 @@ public:
     pnh_.param("green_speed", green_speed_, default_speed_);
     pnh_.param("blue_speed", blue_speed_, default_speed_);
 
+    desired_speed = default_speed_;
     colour_sub_ = nh_.subscribe("/colour", 5, &RgbManagementNode::colourCallback, this);
 
     setSpeed(default_speed_, "initialisation");
@@ -24,7 +25,7 @@ public:
 
 private:
 
-  double desired_speed = default_speed_;
+  double desired_speed{0.0};
   std::string tag = "default";
 
   void colourCallback(const std_msgs::String::ConstPtr& msg) {

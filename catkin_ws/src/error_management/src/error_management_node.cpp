@@ -102,7 +102,7 @@ private:
     geometry_msgs::Twist cmd;
 
     if (!fresh_error) {
-      cmd.linear.x = gains_.speed_min;
+      cmd.linear.x = 0.0;
       cmd.angular.z = 0.0;
     } else {
 
