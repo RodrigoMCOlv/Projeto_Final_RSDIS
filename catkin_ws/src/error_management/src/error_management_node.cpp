@@ -19,17 +19,6 @@ struct Gains {
 
   double boost{0.2};
 
- /* 
-  double kp_lat{0.0};
-  double ki_lat{0.0};
-  double kd_lat{0.0};
-
-
-
-  double kp_head{0.6};
-  double ki_head{0.0};
-  double kd_head{0.05};
-*/
   double error_timeout{0.3};
 };
 
@@ -46,16 +35,6 @@ public:
 
     pnh_.param("boost", gains_.boost, gains_.boost);
 
-
-    /*
-    pnh_.param("kp_lat", gains_.kp_lat, gains_.kp_lat);
-    pnh_.param("ki_lat", gains_.ki_lat, gains_.ki_lat);
-    pnh_.param("kd_lat", gains_.kd_lat, gains_.kd_lat);
-
-    pnh_.param("kp_head", gains_.kp_head, gains_.kp_head);
-    pnh_.param("ki_head", gains_.ki_head, gains_.ki_head);
-    pnh_.param("kd_head", gains_.kd_head, gains_.kd_head);
-    */
     pnh_.param("kp", gains_.kp, gains_.kp);
     pnh_.param("ki", gains_.ki, gains_.ki);
     pnh_.param("kd", gains_.kd, gains_.kd);
@@ -63,11 +42,7 @@ public:
     pnh_.param("error_timeout", gains_.error_timeout, gains_.error_timeout);
 
     cmd_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 25);
-    /*sub_lat_ = nh_.subscribe<std_msgs::Float32>("/line_lateral_error", 10,
-                    &PreviewControllerNode::latCb, this);
-    sub_head_ = nh_.subscribe<std_msgs::Float32>("/line_heading_error", 10,
-                    &PreviewControllerNode::headCb, this);
-    */
+
     error_ = nh_.subscribe<std_msgs::Float32>("/error", 10,
               &PreviewControllerNode::errorCb, this);
     timer_ = nh_.createTimer(ros::Duration(0.02), &PreviewControllerNode::controlLoop, this);
@@ -89,18 +64,7 @@ private:
     time_now = ros::Time::now();
     have_cb = true;
     }
-  /*
-  void latCb(const std_msgs::Float32::ConstPtr& msg) {
-    e_y_ = msg->data;
-    t_e_y_ = ros::Time::now();
-    have_e_y_ = true;
-  }
-  void headCb(const std_msgs::Float32::ConstPtr& msg) {
-    e_psi_ = msg->data;
-    t_e_psi_ = ros::Time::now();
-    have_e_psi_ = true;
-  }
-    */
+
 
   void controlLoop(const ros::TimerEvent&) {
     const ros::Time now = ros::Time::now();
@@ -166,8 +130,6 @@ private:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
   ros::Publisher  cmd_pub_;
-  //ros::Subscriber sub_lat_;
-  //ros::Subscriber sub_head_;
   ros::Subscriber error_;
   
   ros::Timer      timer_;
@@ -176,25 +138,14 @@ private:
 
   
 
-  //float e_y_{0.0f};
-  //float e_psi_{0.0f};
   float error_cb{0.0f};
-  //ros::Time t_e_y_;
-  //ros::Time t_e_psi_;
   ros::Time time_now;
-  //bool have_e_y_{false};
-  //bool have_e_psi_{false};
   bool have_cb{false};
 
 
-  //double lat_integral_{0.0};
-  //double head_integral_{0.0};
+
   double error_integral_{0.0};
-  //double prev_lat_error_{0.0};
-  //double prev_head_error_{0.0};
   double prev_error_{0.0};
-  //bool have_prev_lat_{false};
-  //bool have_prev_head_{false};
   bool have_prev_error_{false};
   
   
