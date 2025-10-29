@@ -1,0 +1,4 @@
+[submodule "raspicam_node"]
+	path = catkin_ws/src/raspicam_node
+	url = https://github.com/UbiquityRobotics/raspicam_node.git
+	branch = kinetic
