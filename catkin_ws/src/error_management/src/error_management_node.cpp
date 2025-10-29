@@ -6,7 +6,7 @@
 #include <std_msgs/Float32.h>
 
 struct Gains {
-  double base_speed{0.14};
+  double base_speed{0.0};
   double speed_min{0.05};
   double speed_max{0.2};
 
@@ -45,7 +45,7 @@ public:
 
     error_ = nh_.subscribe<std_msgs::Float32>("/error", 10,
               &PreviewControllerNode::errorCb, this);
-    timer_ = nh_.createTimer(ros::Duration(0.02), &PreviewControllerNode::controlLoop, this);
+    timer_ = nh_.createTimer(ros::Duration(0.033), &PreviewControllerNode::controlLoop, this);
   }
 
 private:

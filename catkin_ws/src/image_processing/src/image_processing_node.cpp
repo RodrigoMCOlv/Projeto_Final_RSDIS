@@ -15,9 +15,6 @@
 using namespace cv;
 
 ros::Publisher pub_image;
-//ros::Publisher pub_error_legacy;
-//ros::Publisher pub_error_lat;
-//ros::Publisher pub_error_head;
 ros::Publisher pub_error;
 
 struct Params {
@@ -54,9 +51,6 @@ struct Params {
 
 namespace {
   float line_error = 0;
-  // EMA state
-  //float e_y_f = 0.0f, e_psi_f = 0.0f;
-  //bool have_filter = false;
 }
 
 static bool findTwoEdgesInRow(const cv::Mat& edges, int rowIndex,
@@ -125,21 +119,12 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
   const int rows = edges.rows;
   const int cols = edges.cols;
   int row_far  = std::max(0, std::min(rows - 1, int(std::round(g_params.row_far_ratio  * rows))));
-  //int row_near = std::max(0, std::min(rows - 1, int(std::round(g_params.row_near_ratio * rows))));
-  // Ensure far is above near (smaller y)
-  //if (row_far > row_near) std::swap(row_far, row_near);
 
   // Find two edges on each row
   unsigned int rowFarCols[2]  = {0, 0};
-  //unsigned int rowNearCols[2] = {0, 0};
-  int farCount = 0; //, nearCount = 0;
+  int farCount = 0;
 
   bool farOK  = findTwoEdgesInRow(edges, row_far,  g_params.margin_px, g_params.min_gap_px, rowFarCols,  farCount);
-  //bool nearOK = findTwoEdgesInRow(edges, row_near, g_params.margin_px, g_params.min_gap_px, rowNearCols, nearCount);
-
-  //float e_y = 0.0f;
-  //float e_psi = 0.0f;
-  //bool have_measure = false;
 
   if (farOK) {
     // centers
@@ -162,12 +147,11 @@ void image_callback(const sensor_msgs::CompressedImageConstPtr& msg)
       cv::line(edges, far_point, bottom_center, cv::Scalar(255), 1);
     }
   } else {
-    // No measurement: keep last EMA (do nothing) or slowly decay towards 0
-    // e_y_f *= 0.98f; e_psi_f *= 0.98f; // optional
+
   }
 
   // Publish errors
-  std_msgs::Float32 error_msg;//msg_lat, msg_head, msg_legacy;
+  std_msgs::Float32 error_msg;
   error_msg.data = line_error;
 
 
@@ -197,7 +181,6 @@ int main(int argc, char **argv)
   nh.param("crop_h", g_params.crop_h, g_params.crop_h);
 
   nh.param("row_far_ratio",  g_params.row_far_ratio,  g_params.row_far_ratio);
-  //nh.param("row_near_ratio", g_params.row_near_ratio, g_params.row_near_ratio);
 
   nh.param("margin_px",  g_params.margin_px,  g_params.margin_px);
   nh.param("min_gap_px", g_params.min_gap_px, g_params.min_gap_px);
@@ -218,9 +201,7 @@ int main(int argc, char **argv)
       n.subscribe<sensor_msgs::CompressedImage>("/raspicam_node/image/compressed", 1, image_callback);
 
   pub_image        = n.advertise<sensor_msgs::Image>("/Processed_Image", 1);
-  //pub_error_legacy = n.advertise<std_msgs::Float32>("/error", 1);
-  //pub_error_lat    = n.advertise<std_msgs::Float32>("/line_lateral_error", 1);
-  //pub_error_head   = n.advertise<std_msgs::Float32>("/line_heading_error", 1);
+
 
   pub_error = n.advertise<std_msgs::Float32>("/error", 1);
 

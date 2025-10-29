@@ -12,7 +12,7 @@
   <arg name="kp" default="1.1"/>
   <arg name="ki" default="0.0"/>
   <arg name="kd" default="0.15"/>
-  <arg name="error_timeout" default="20"/>
+  <arg name="error_timeout" default="3"/>
   <arg name="crop_x" default="0"/>
   <arg name="crop_y" default="180"/>
   <arg name="crop_w" default="410"/>
