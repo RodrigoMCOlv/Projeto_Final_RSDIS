@@ -8,7 +8,7 @@
   <arg name="speed_min" default="0"/>
   <arg name="speed_max" default="1"/>
   <arg name="angular_max" default="1"/>
-  <arg name="boost" default="0.0"/>
+  <arg name="boost" default="0.25"/>
   <arg name="kp" default="0.7"/>
   <arg name="ki" default="0.0"/>
   <arg name="kd" default="0.09"/>
@@ -27,7 +27,7 @@
   <arg name="thr_low" default="0"/>
   <arg name="thr_high" default="70"/>
 
-  <arg name="rgb_red_speed" default="0.4"/>
+  <arg name="rgb_red_speed" default="0.35"/>
   <arg name="rgb_green_speed" default="0.3"/>
   <arg name="rgb_blue_speed" default="0.5"/>
 

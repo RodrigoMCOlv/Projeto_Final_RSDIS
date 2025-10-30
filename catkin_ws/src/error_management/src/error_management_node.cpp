@@ -106,7 +106,7 @@ private:
       cmd.angular.z = 0.0;
     } else {
 
-      if (error_output < 0.03 && error_output > -0.03)
+      if (error_output < 0.1 && error_output > -0.01)
       {
         double speed = clip(gains_.base_speed + gains_.boost, gains_.speed_min, gains_.speed_max);
         cmd.linear.x = speed;
