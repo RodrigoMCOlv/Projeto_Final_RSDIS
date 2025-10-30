@@ -47,7 +47,8 @@
   <arg name="stats_cmd_topic" default="/cmd_vel"/>
   <arg name="stats_enable_keyboard" default="true"/>
   <arg name="stats_status_period" default="5.0"/>
-  <arg name="stats_log_file" default=""/>
+  <arg name="stats_log_file" default="~/line_laps"/>
+  <arg name="stats_sample_log_dir" default="~/laps_stats.csv"/>
 
   <node type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
     <param name="private_topics" value="true"/>
@@ -137,6 +138,7 @@
     <param name="enable_keyboard" value="$(arg stats_enable_keyboard)"/>
     <param name="status_period" value="$(arg stats_status_period)"/>
     <param name="log_file" value="$(arg stats_log_file)"/>
+    <param name="sample_log_dir" value="$(arg stats_sample_log_dir)"/>
   </node>
 
 </launch>

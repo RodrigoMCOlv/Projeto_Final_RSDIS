@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cerrno>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -9,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <geometry_msgs/Twist.h>
 #include <ros/ros.h>
@@ -17,6 +20,8 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 namespace line_statistics {
 
@@ -89,8 +94,88 @@ struct LapMetrics {
   double angular_abs_sum{0.0};
   double linear_max{0.0};
   double angular_max_abs{0.0};
+  ros::Time start_time;
   ros::Time stamp;
 };
+
+enum class SampleType {
+  Error,
+  Command
+};
+
+struct SampleEntry {
+  ros::Time stamp;
+  SampleType type{SampleType::Error};
+  double error{std::numeric_limits<double>::quiet_NaN()};
+  double linear{std::numeric_limits<double>::quiet_NaN()};
+  double angular{std::numeric_limits<double>::quiet_NaN()};
+};
+
+namespace {
+
+const char* sampleTypeToString(SampleType type) {
+  return (type == SampleType::Error) ? "error" : "command";
+}
+
+bool ensureDirectoryExists(const std::string& path) {
+  if (path.empty()) {
+    return false;
+  }
+
+  std::string normalized = path;
+  while (normalized.size() > 1 && normalized.back() == '/') {
+    normalized.pop_back();
+  }
+
+  if (normalized.empty()) {
+    return false;
+  }
+
+  std::string current;
+  if (!normalized.empty() && normalized.front() == '/') {
+    current = "/";
+  }
+
+  std::stringstream ss(normalized);
+  std::string segment;
+  while (std::getline(ss, segment, '/')) {
+    if (segment.empty()) {
+      continue;
+    }
+    if (!current.empty() && current.back() != '/') {
+      current.push_back('/');
+    }
+    current += segment;
+
+    if (::mkdir(current.c_str(), 0755) != 0) {
+      if (errno == EEXIST) {
+        continue;
+      }
+      if (errno == ENOENT || errno == ENOTDIR || errno == EACCES) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+std::string joinPath(const std::string& base, const std::string& leaf) {
+  if (base.empty()) {
+    return leaf;
+  }
+  if (leaf.empty()) {
+    return base;
+  }
+  if (leaf.front() == '/') {
+    return leaf;
+  }
+  if (base.back() == '/') {
+    return base + leaf;
+  }
+  return base + "/" + leaf;
+}
+
+}  // namespace
 
 class StatisticsNode {
 public:
@@ -100,6 +185,7 @@ public:
     pnh_.param<std::string>("error_topic", error_topic_, "/error");
     pnh_.param<std::string>("cmd_topic", cmd_topic_, "/cmd_vel");
     pnh_.param<std::string>("log_file", log_file_path_, std::string());
+    pnh_.param<std::string>("sample_log_dir", sample_log_dir_, std::string());
     pnh_.param("enable_keyboard", enable_keyboard_, true);
     pnh_.param("status_period", status_period_, 5.0);
 
@@ -117,6 +203,15 @@ public:
 
     if (!log_file_path_.empty()) {
       openLogFile();
+    }
+
+    if (!sample_log_dir_.empty()) {
+      sample_log_dir_ = expandUserPath(sample_log_dir_);
+      samples_dir_ready_ = ensureDirectoryExists(sample_log_dir_);
+      if (!samples_dir_ready_) {
+        ROS_WARN_STREAM("statistics_node: failed to prepare sample directory at "
+                        << sample_log_dir_);
+      }
     }
 
     if (enable_keyboard_) {
@@ -183,22 +278,46 @@ private:
     }
 
     error_stats_.add(static_cast<double>(msg->data));
+
+    SampleEntry entry;
+    entry.stamp = stamp;
+    entry.type = SampleType::Error;
+    entry.error = static_cast<double>(msg->data);
+    entry.linear = last_cmd_linear_;
+    entry.angular = last_cmd_angular_;
+    samples_.push_back(entry);
   }
 
   void cmdCb(const geometry_msgs::Twist::ConstPtr& msg) {
     std::lock_guard<std::mutex> lock(data_mutex_);
+    const ros::Time stamp = ros::Time::now();
+
+    last_cmd_linear_ = static_cast<double>(msg->linear.x);
+    last_cmd_angular_ = static_cast<double>(msg->angular.z);
+
+    if (!lap_active_) {
+      return;
+    }
+
     ++velocity_samples_;
-    linear_sum_ += static_cast<double>(msg->linear.x);
-    linear_abs_sum_ += std::abs(static_cast<double>(msg->linear.x));
-    angular_sum_ += static_cast<double>(msg->angular.z);
-    angular_abs_sum_ += std::abs(static_cast<double>(msg->angular.z));
+    linear_sum_ += last_cmd_linear_;
+    linear_abs_sum_ += std::abs(last_cmd_linear_);
+    angular_sum_ += last_cmd_angular_;
+    angular_abs_sum_ += std::abs(last_cmd_angular_);
     if (msg->linear.x > linear_max_) {
       linear_max_ = msg->linear.x;
     }
-    const double abs_ang = std::abs(static_cast<double>(msg->angular.z));
+    const double abs_ang = std::abs(last_cmd_angular_);
     if (abs_ang > angular_max_abs_) {
       angular_max_abs_ = abs_ang;
     }
+
+    SampleEntry entry;
+    entry.stamp = stamp;
+    entry.type = SampleType::Command;
+    entry.linear = last_cmd_linear_;
+    entry.angular = last_cmd_angular_;
+    samples_.push_back(entry);
   }
 
   void statusTimerCb(const ros::TimerEvent&) {
@@ -227,6 +346,7 @@ private:
     metrics.angular_abs_sum = angular_abs_sum_;
     metrics.linear_max = linear_max_;
     metrics.angular_max_abs = angular_max_abs_;
+    metrics.start_time = lap_start_time_;
     metrics.stamp = now;
     return metrics;
   }
@@ -306,6 +426,55 @@ private:
     log_file_.flush();
   }
 
+  void writeLapSamples(const LapMetrics& metrics,
+                       const std::vector<SampleEntry>& samples,
+                       const std::string& /*trigger*/) {
+    if (samples.empty() || sample_log_dir_.empty()) {
+      return;
+    }
+
+    if (!samples_dir_ready_) {
+      samples_dir_ready_ = ensureDirectoryExists(sample_log_dir_);
+      if (!samples_dir_ready_) {
+        ROS_WARN_STREAM("statistics_node: unable to create sample directory at "
+                        << sample_log_dir_);
+        return;
+      }
+    }
+
+    std::ostringstream fname;
+    fname << "lap_" << std::setw(3) << std::setfill('0') << metrics.lap_index
+          << "_" << metrics.stamp.sec << "_"
+          << std::setw(9) << std::setfill('0') << metrics.stamp.nsec
+          << ".csv";
+
+    const std::string full_path = joinPath(sample_log_dir_, fname.str());
+    std::ofstream file(full_path.c_str());
+    if (!file.is_open()) {
+      ROS_WARN_STREAM("statistics_node: failed to open sample log " << full_path);
+      return;
+    }
+
+    file << "type,stamp_relative,stamp_absolute,error,linear_x,angular_z\n";
+    file << std::fixed << std::setprecision(6);
+
+    ros::Time reference = metrics.start_time;
+    if (reference.isZero()) {
+      reference = metrics.stamp - metrics.duration;
+    }
+
+    for (const auto& sample : samples) {
+      const double relative = std::max(0.0, (sample.stamp - reference).toSec());
+      file << sampleTypeToString(sample.type) << ','
+           << relative << ','
+           << sample.stamp.toSec() << ','
+           << sample.error << ','
+           << sample.linear << ','
+           << sample.angular << '\n';
+    }
+    file.flush();
+  }
+
   void resetLapLocked(const ros::Time& reset_stamp) {
     error_stats_.reset();
     velocity_samples_ = 0;
@@ -315,6 +484,9 @@ private:
     angular_abs_sum_ = 0.0;
     linear_max_ = 0.0;
     angular_max_abs_ = 0.0;
+    samples_.clear();
+    last_cmd_linear_ = std::numeric_limits<double>::quiet_NaN();
+    last_cmd_angular_ = std::numeric_limits<double>::quiet_NaN();
     lap_active_ = false;
     lap_start_time_ = reset_stamp;
   }
@@ -322,6 +494,7 @@ private:
   void markLapEnd(const std::string& trigger) {
     LapMetrics snapshot;
     std::size_t lap_index_finished = 0;
+    std::vector<SampleEntry> lap_samples;
     {
       std::lock_guard<std::mutex> lock(data_mutex_);
       if (!lap_active_ || error_stats_.count == 0) {
@@ -332,6 +505,7 @@ private:
 
       const ros::Time now = ros::Time::now();
       snapshot = collectMetricsLocked(now);
+      lap_samples.swap(samples_);
       lap_index_finished = lap_index_;
       ++lap_index_;
       resetLapLocked(now);
@@ -345,6 +519,7 @@ private:
 
     publishSummary(snapshot, trigger);
     writeLapToFile(snapshot, trigger);
+    writeLapSamples(snapshot, lap_samples, trigger);
   }
 
   char readKeyNonBlocking() const {
@@ -397,9 +572,11 @@ private:
   std::string error_topic_;
   std::string cmd_topic_;
   std::string log_file_path_;
+  std::string sample_log_dir_;
 
   bool enable_keyboard_{true};
   double status_period_{5.0};
+  bool samples_dir_ready_{false};
 
   std::mutex data_mutex_;
   RunningStats error_stats_;
@@ -410,6 +587,9 @@ private:
   double angular_abs_sum_{0.0};
   double linear_max_{0.0};
   double angular_max_abs_{0.0};
+  std::vector<SampleEntry> samples_;
+  double last_cmd_linear_{std::numeric_limits<double>::quiet_NaN()};
+  double last_cmd_angular_{std::numeric_limits<double>::quiet_NaN()};
 
   bool lap_active_{false};
   std::size_t lap_index_{1};
