@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="teleop" type="teleop_node" name="teleop" output="screen"/>
+  <node pkg="motor_control" type="motor_control_node" name="motor_control_node" output="screen"/>
+</launch>
