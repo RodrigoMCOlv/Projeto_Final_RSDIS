@@ -260,10 +260,10 @@ private:
 
     log_file_path_ = expanded;
     if (!has_content) {
-      log_file_ << "lap_index,stamp,laptime_sec,samples,mean_error,rmse,stddev,"
+      log_file_ << "laptime_sec,samples,mean_error,rmse,stddev,"
                    "mean_abs_error,max_abs_error,"
                    "avg_linear,avg_abs_linear,avg_angular,avg_abs_angular,"
-                   "max_linear,max_abs_angular,trigger\n";
+                   "max_linear,max_abs_angular\n";
       log_file_.flush();
     }
   }
@@ -407,8 +407,7 @@ private:
     const double avg_angular = (samples > 0.0) ? metrics.angular_sum / samples : 0.0;
     const double mean_abs_angular = (samples > 0.0) ? metrics.angular_abs_sum / samples : 0.0;
 
-    log_file_ << metrics.lap_index << ','
-              << std::fixed << std::setprecision(6) << metrics.stamp.toSec() << ','
+    log_file_ << std::fixed << std::setprecision(6)
               << metrics.duration.toSec() << ','
               << metrics.error_stats.count << ','
               << metrics.error_stats.mean << ','
@@ -421,8 +420,7 @@ private:
               << avg_angular << ','
               << mean_abs_angular << ','
               << metrics.linear_max << ','
-              << metrics.angular_max_abs << ','
-              << trigger << '\n';
+              << metrics.angular_max_abs << '\n';
     log_file_.flush();
   }
 
