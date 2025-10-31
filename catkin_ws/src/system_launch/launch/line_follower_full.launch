@@ -49,8 +49,8 @@
   <arg name="stats_cmd_topic" default="/cmd_vel"/>
   <arg name="stats_enable_keyboard" default="true"/>
   <arg name="stats_status_period" default="5.0"/>
-  <arg name="stats_log_file" default="line_laps.csv"/>
-  <arg name="stats_sample_log_dir" default="~/laps_stats"/>
+  <arg name="stats_log_file" default="~/Line_lap_logs/line_laps.csv"/>
+  <arg name="stats_sample_log_dir" default=""/>
 
   <node type="raspicam_node" pkg="raspicam_node" name="raspicam_node" output="screen">
     <param name="private_topics" value="true"/>
