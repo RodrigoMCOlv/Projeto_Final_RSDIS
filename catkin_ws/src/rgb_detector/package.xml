@@ -3,8 +3,9 @@
   <name>rgb_detector</name>
   <version>0.0.0</version>
   <description>The rgb_detector package</description>
-  <maintainer email="lsa@lsa.lsa">adias</maintainer>
-  <license>LSA</license>
+  <maintainer email="1231491@isep.ipp.pt">Rodrigo Oliveira</maintainer>
+  <maintainer email="1220892@isep.ipp.pt">Bruno Moreira</maintainer>
+  <license>MIT</license>
 
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->

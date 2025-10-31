@@ -3,13 +3,14 @@
   <name>teleop</name>
   <version>0.0.0</version>
   <description>The teleop package</description>
-  <maintainer email="lsa@lsa.lsa">lsa</maintainer>
+  <maintainer email="1231491@isep.ipp.pt">Rodrigo Oliveira</maintainer>
+  <maintainer email="1220892@isep.ipp.pt">Bruno Moreira</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>MIT</license>
 
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->

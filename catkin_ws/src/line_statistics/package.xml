@@ -4,7 +4,8 @@
   <version>0.0.1</version>
   <description>Runtime statistics for the line follower stack.</description>
 
-  <maintainer email="lsa@lsa.lsa">TODO</maintainer>
+  <maintainer email="1231491@isep.ipp.pt">Rodrigo Oliveira</maintainer>
+  <maintainer email="1220892@isep.ipp.pt">Bruno Moreira</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
