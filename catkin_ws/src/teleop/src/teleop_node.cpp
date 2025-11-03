@@ -15,7 +15,7 @@ const std::unordered_map<char, KeyBinding> kKeyBindings{
     {'i', {0.3,  0.0}},
     {'w', {0.3,  0.0}},
     {'o', {0.3, -0.2}},
-    {'j', {0.3,  0.2}},
+    {'j', {0.0,  0.2}},
     {'q', {0.0,  0.2}},
     {'k', {0.0,  0.0}},
     {' ', {0.0,  0.0}},
@@ -25,7 +25,6 @@ const std::unordered_map<char, KeyBinding> kKeyBindings{
     {',', {-0.3,  0.0}},
     {'s', {-0.3,  0.0}},
     {'.', {-0.3,  0.2}},
-    {'v', {0.3 , 0.1}},
 };
 
 
